@@ -81,7 +81,7 @@ export default function LoginPage() {
         <CardFooter className="flex flex-col gap-4">
           <SubmitButton />
           <Button asChild variant="secondary" className="w-full">
-            <Link href="/dashboard">Bypass to Dashboard</Link>
+            <Link href="/dashboard?bypass=true">Bypass to Dashboard</Link>
           </Button>
           <div className="text-center text-sm">
             Don&apos;t have an account?{' '}

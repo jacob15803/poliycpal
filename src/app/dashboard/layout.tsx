@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth, FullScreenLoader } from '@/context/auth-context';
 import {
   SidebarProvider,
@@ -20,14 +20,20 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isBypass = searchParams.get('bypass') === 'true';
 
   useEffect(() => {
+    // If we are bypassing auth, don't run the redirect logic
+    if (isBypass) return;
+
     if (!loading && !user) {
       router.push(`/login?redirect=${pathname}`);
     }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, router, pathname, isBypass]);
 
-  if (loading || !user) {
+  // If we are bypassing, we can show the dashboard even if user is not loaded
+  if (!isBypass && (loading || !user)) {
     return <FullScreenLoader />;
   }
 
