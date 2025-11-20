@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react';
 import { handleQuery, type QueryFormState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +26,7 @@ function SubmitButton() {
 
 export function QueryForm() {
   const initialState: QueryFormState = { result: null, error: null };
-  const [state, dispatch] = useFormState(handleQuery, initialState);
+  const [state, dispatch] = useActionState(handleQuery, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const { currentQuestion, setCurrentQuestion } = useDashboard();
 
