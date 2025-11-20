@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { signUpWithEmail, type AuthFormState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +30,7 @@ function SubmitButton() {
 
 export default function SignupPage() {
   const initialState: AuthFormState = { error: null, success: false };
-  const [state, dispatch] = useFormState(signUpWithEmail, initialState);
+  const [state, dispatch] = useActionState(signUpWithEmail, initialState);
 
   return (
     <Card className="w-full max-w-sm">
