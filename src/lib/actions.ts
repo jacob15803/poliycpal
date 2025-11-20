@@ -9,7 +9,8 @@ import { detectPolicyArea } from '@/ai/flows/intelligent-policy-area-detection';
 import { generateConsolidatedAnswer } from '@/ai/flows/consolidated-answer-generation';
 import { getPolicyDocument } from './policies';
 import { addQueryToHistory } from './db';
-import { revalidatePath, redirect } from 'next/cache';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export type AuthFormState = {
   error: string | null;
