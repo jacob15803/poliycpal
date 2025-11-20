@@ -80,6 +80,9 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <SubmitButton />
+          <Button asChild variant="secondary" className="w-full">
+            <Link href="/dashboard">Bypass to Dashboard</Link>
+          </Button>
           <div className="text-center text-sm">
             Don&apos;t have an account?{' '}
             <Link href="/signup" className="underline">
