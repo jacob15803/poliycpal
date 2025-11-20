@@ -30,11 +30,10 @@ export async function signUpWithEmail(
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
+    return { error: null, success: true };
   } catch (e: any) {
     return { error: e.message, success: false };
   }
-  
-  return { error: null, success: true };
 }
 
 export async function loginWithEmail(
