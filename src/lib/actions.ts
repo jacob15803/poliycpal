@@ -48,7 +48,10 @@ export async function loginWithEmail(
   }
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (!userCredential.user) {
+        return { error: 'Login failed. Please try again.', success: false };
+    }
   } catch (e: any) {
     return { error: e.message, success: false };
   }
