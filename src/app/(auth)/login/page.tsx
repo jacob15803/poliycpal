@@ -18,8 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Logo } from '@/components/icons';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -33,14 +31,26 @@ function SubmitButton() {
 export default function LoginPage() {
   const initialState: AuthFormState = { error: null, success: false };
   const [state, dispatch] = useActionState(loginWithEmail, initialState);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (state.success) {
-      router.push('/dashboard');
-    }
-  }, [state.success, router]);
-
+  if (state.success) {
+    return (
+      <>
+        <meta httpEquiv="refresh" content="1;url=/dashboard" />
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Success!</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Success!</AlertTitle>
+              <AlertDescription>Redirecting you to the dashboard...</AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -60,13 +70,6 @@ export default function LoginPage() {
               <Terminal className="h-4 w-4" />
               <AlertTitle>Authentication Error</AlertTitle>
               <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
-           {state.success && (
-            <Alert>
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Success!</AlertTitle>
-              <AlertDescription>Redirecting you to the dashboard...</AlertDescription>
             </Alert>
           )}
           <div className="grid gap-2">

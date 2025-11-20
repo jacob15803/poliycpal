@@ -10,7 +10,6 @@ import { generateConsolidatedAnswer } from '@/ai/flows/consolidated-answer-gener
 import { getPolicyDocument } from './policies';
 import { addQueryToHistory } from './db';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export type AuthFormState = {
   error: string | null;
