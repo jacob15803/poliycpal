@@ -9,7 +9,7 @@ import { detectPolicyArea } from '@/ai/flows/intelligent-policy-area-detection';
 import { generateConsolidatedAnswer } from '@/ai/flows/consolidated-answer-generation';
 import { getPolicyDocument } from './policies';
 import { addQueryToHistory } from './db';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, redirect } from 'next/cache';
 
 export type AuthFormState = {
   error: string | null;
@@ -32,7 +32,7 @@ export async function signUpWithEmail(
   } catch (e: any) {
     return { error: e.message, success: false };
   }
-  return { error: null, success: true };
+  redirect('/dashboard');
 }
 
 export async function loginWithEmail(
@@ -55,7 +55,7 @@ export async function loginWithEmail(
     return { error: e.message, success: false };
   }
 
-  return { error: null, success: true };
+  redirect('/dashboard');
 }
 
 export interface QueryResult {

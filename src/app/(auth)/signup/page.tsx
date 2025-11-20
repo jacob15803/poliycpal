@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useEffect } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useRouter } from 'next/navigation';
 import { signUpWithEmail, type AuthFormState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,14 +31,6 @@ function SubmitButton() {
 export default function SignupPage() {
   const initialState: AuthFormState = { error: null, success: false };
   const [state, dispatch] = useActionState(signUpWithEmail, initialState);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (state.success) {
-      router.push('/dashboard');
-    }
-  }, [state.success, router]);
-
 
   return (
     <Card className="w-full max-w-sm">
