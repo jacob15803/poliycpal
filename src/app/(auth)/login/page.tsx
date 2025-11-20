@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loginWithEmail, type AuthFormState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,15 @@ function SubmitButton() {
 export default function LoginPage() {
   const initialState: AuthFormState = { error: null, success: false };
   const [state, dispatch] = useActionState(loginWithEmail, initialState);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
+
+  useEffect(() => {
+    if (state.success) {
+      router.push(redirectUrl);
+    }
+  }, [state.success, router, redirectUrl]);
 
   return (
     <Card className="w-full max-w-sm">

@@ -56,7 +56,7 @@ export async function loginWithEmail(
     return { error: e.message, success: false };
   }
 
-  redirect('/dashboard');
+  return { error: null, success: true };
 }
 
 export interface QueryResult {
