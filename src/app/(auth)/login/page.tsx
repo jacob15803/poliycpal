@@ -18,6 +18,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Logo } from '@/components/icons';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -31,6 +33,14 @@ function SubmitButton() {
 export default function LoginPage() {
   const initialState: AuthFormState = { error: null, success: false };
   const [state, dispatch] = useActionState(loginWithEmail, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      router.push('/dashboard');
+    }
+  }, [state.success, router]);
+
 
   return (
     <Card className="w-full max-w-sm">
