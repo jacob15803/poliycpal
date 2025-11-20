@@ -40,7 +40,7 @@ export default function LoginPage() {
     if (state.success) {
       router.push(redirectUrl);
     }
-  }, [state.success, router, redirectUrl]);
+  }, [state, router, redirectUrl]);
 
   return (
     <Card className="w-full max-w-sm">
@@ -60,6 +60,13 @@ export default function LoginPage() {
               <Terminal className="h-4 w-4" />
               <AlertTitle>Authentication Error</AlertTitle>
               <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+          )}
+           {state.success && (
+            <Alert>
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Success!</AlertTitle>
+              <AlertDescription>Redirecting you to the dashboard...</AlertDescription>
             </Alert>
           )}
           <div className="grid gap-2">
