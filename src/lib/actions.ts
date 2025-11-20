@@ -5,7 +5,6 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { redirect } from 'next/navigation';
 import { detectPolicyArea } from '@/ai/flows/intelligent-policy-area-detection';
 import { generateConsolidatedAnswer } from '@/ai/flows/consolidated-answer-generation';
 import { getPolicyDocument } from './policies';
@@ -33,7 +32,7 @@ export async function signUpWithEmail(
   } catch (e: any) {
     return { error: e.message, success: false };
   }
-  redirect('/dashboard');
+  return { error: null, success: true };
 }
 
 export async function loginWithEmail(

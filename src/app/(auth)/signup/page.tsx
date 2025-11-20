@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { signUpWithEmail, type AuthFormState } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,14 @@ function SubmitButton() {
 export default function SignupPage() {
   const initialState: AuthFormState = { error: null, success: false };
   const [state, dispatch] = useActionState(signUpWithEmail, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      router.push('/dashboard');
+    }
+  }, [state.success, router]);
+
 
   return (
     <Card className="w-full max-w-sm">
@@ -50,6 +59,13 @@ export default function SignupPage() {
               <Terminal className="h-4 w-4" />
               <AlertTitle>Registration Error</AlertTitle>
               <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+          )}
+           {state.success && (
+            <Alert>
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Success!</AlertTitle>
+              <AlertDescription>Your account has been created. Redirecting...</AlertDescription>
             </Alert>
           )}
           <div className="grid gap-2">
