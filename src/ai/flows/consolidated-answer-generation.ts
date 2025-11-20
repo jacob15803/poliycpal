@@ -16,7 +16,7 @@ import {z} from 'genkit';
 
 // Define the input schema
 const ConsolidatedAnswerInputSchema = z.object({
-  question: z.string().describe('The user\\'s policy question.'),
+  question: z.string().describe("The user's policy question."),
   informationSources: z.string().describe('Relevant information from different policy documents.'),
 });
 export type ConsolidatedAnswerInput = z.infer<typeof ConsolidatedAnswerInputSchema>;
