@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
-import { loginWithEmail, type AuthFormState } from '@/lib/actions';
+import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,37 +20,44 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Logo } from '@/components/icons';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ loading }: { loading: boolean }) {
   return (
-    <Button type="submit" className="w-full" disabled={pending} aria-disabled={pending}>
-      {pending ? 'Signing In...' : 'Sign In'}
+    <Button type="submit" className="w-full" disabled={loading} aria-disabled={loading}>
+      {loading ? 'Signing In...' : 'Sign In'}
     </Button>
   );
 }
 
 export default function LoginPage() {
-  const initialState: AuthFormState = { error: null, success: false };
-  const [state, dispatch] = useActionState(loginWithEmail, initialState);
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (state.success) {
-    return (
-      <>
-        <meta httpEquiv="refresh" content="1;url=/dashboard" />
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Success!</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Success!</AlertTitle>
-              <AlertDescription>Redirecting you to the dashboard...</AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </>
-    );
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    const email = (data.get('email') as string) || '';
+    const password = (data.get('password') as string) || '';
+
+    if (!email || !password) {
+      setError('Email and password are required.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // redirect to dashboard
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -59,45 +67,38 @@ export default function LoginPage() {
           <Logo className="h-8 w-8 text-primary" />
         </div>
         <CardTitle className="text-2xl font-headline">Welcome to PolicyPal</CardTitle>
-        <CardDescription>
-          Sign in to your account to get policy answers.
-        </CardDescription>
+        <CardDescription>Sign in to your account to get policy answers.</CardDescription>
       </CardHeader>
-      <form action={dispatch}>
+
+      <form onSubmit={handleSubmit}>
         <CardContent className="grid gap-4">
-          {state.error && (
+          {error && (
             <Alert variant="destructive">
               <Terminal className="h-4 w-4" />
               <AlertTitle>Authentication Error</AlertTitle>
-              <AlertDescription>{state.error}</AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="m@example.com"
-              required
-            />
+            <Input id="email" type="email" name="email" placeholder="m@example.com" required />
           </div>
-  
+
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" name="password" required />
           </div>
         </CardContent>
+
         <CardFooter className="flex flex-col gap-4">
-          <SubmitButton />
+          <SubmitButton loading={loading} />
           <Button asChild variant="secondary" className="w-full">
             <Link href="/dashboard?bypass=true">Bypass to Dashboard</Link>
           </Button>
           <div className="text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
-            </Link>
+            <Link href="/signup" className="underline">Sign up</Link>
           </div>
         </CardFooter>
       </form>

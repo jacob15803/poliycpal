@@ -10,6 +10,7 @@ import { generateConsolidatedAnswer } from '@/ai/flows/consolidated-answer-gener
 import { getPolicyDocument } from './policies';
 import { addQueryToHistory } from './db';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export type AuthFormState = {
   error: string | null;
@@ -75,7 +76,7 @@ export async function handleQuery(
   data: FormData
 ): Promise<QueryFormState> {
   const question = data.get('question') as string;
-  const userId = auth.currentUser?.uid;
+  const userId = data.get('userId') as string;
 
   if (!question) {
     return { result: null, error: 'Please enter a question.' };

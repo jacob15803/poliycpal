@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AnswerDisplay } from './answer-display';
 import { useEffect, useRef } from 'react';
 import { useDashboard } from '@/context/dashboard-context';
+import { useAuth } from '@/context/auth-context';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,6 +27,7 @@ function SubmitButton() {
 }
 
 export function QueryForm() {
+  const { user } = useAuth();
   const initialState: QueryFormState = { result: null, error: null };
   const [state, dispatch] = useActionState(handleQuery, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -48,6 +50,7 @@ export function QueryForm() {
           action={dispatch}
           className="relative w-full max-w-2xl mx-auto"
         >
+          <input type="hidden" name="userId" value={user?.uid || ''} />
           <Textarea
             name="question"
             placeholder="e.g., What is our policy on remote work?"
