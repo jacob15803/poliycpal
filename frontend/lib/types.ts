@@ -8,6 +8,11 @@ export interface Query {
   question: string;
   answer: string;
   policyArea: PolicyArea;
-  sources: string;
+  sources: string | string[];
   createdAt: Timestamp;
+  // Debate flow data (optional for backward compatibility)
+  itExpertResponse?: string;
+  hrExpertResponse?: string;
+  itContext?: string[];
+  hrContext?: string[];
 }

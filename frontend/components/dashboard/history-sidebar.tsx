@@ -18,6 +18,7 @@ import { getUserQueryHistory } from '@/lib/db';
 import type { Query } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { useDashboard } from '@/context/dashboard-context';
+import { useRouter } from 'next/navigation';
 
 export function HistorySidebar() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export function HistorySidebar() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const { setCurrentQuestion } = useDashboard();
+  const router = useRouter();
 
   useEffect(() => {
     if (user?.uid) {
@@ -66,7 +68,10 @@ export function HistorySidebar() {
                     variant="ghost"
                     size="lg"
                     className="h-auto whitespace-normal"
-                    onClick={() => setCurrentQuestion(item.question)}
+                    onClick={() => {
+                      setCurrentQuestion(item.question);
+                      router.push(`/history/${item.id}`);
+                    }}
                   >
                     <div className="flex flex-col items-start gap-1 w-full text-left">
                       <span className="truncate max-w-full">{item.question}</span>

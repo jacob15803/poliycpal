@@ -16,17 +16,33 @@ export async function addQueryToHistory(
   question: string,
   answer: string,
   policyArea: PolicyArea,
-  sources: string
+  sources: string | string[],
+  debateFlow?: {
+    itExpertResponse?: string;
+    hrExpertResponse?: string;
+    itContext?: string[];
+    hrContext?: string[];
+  }
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, 'queries'), {
+    const docData: any = {
       userId,
       question,
       answer,
       policyArea,
-      sources,
+      sources: Array.isArray(sources) ? sources : (sources ? [sources] : []),
       createdAt: Timestamp.now(),
-    });
+    };
+    
+    // Add debate flow data if provided
+    if (debateFlow) {
+      if (debateFlow.itExpertResponse) docData.itExpertResponse = debateFlow.itExpertResponse;
+      if (debateFlow.hrExpertResponse) docData.hrExpertResponse = debateFlow.hrExpertResponse;
+      if (debateFlow.itContext) docData.itContext = debateFlow.itContext;
+      if (debateFlow.hrContext) docData.hrContext = debateFlow.hrContext;
+    }
+    
+    const docRef = await addDoc(collection(db, 'queries'), docData);
     return docRef.id;
   } catch (error) {
     console.error('Error adding document: ', error);

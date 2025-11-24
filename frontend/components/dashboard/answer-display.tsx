@@ -57,8 +57,16 @@ const ResultDisplay = ({ result }: { result: QueryResult }) => (
         <summary className="text-sm font-medium cursor-pointer">
           View Information Sources
         </summary>
-        <div className="mt-2 text-xs text-muted-foreground bg-secondary p-4 rounded-md whitespace-pre-wrap">
-          {result.sources}
+        <div className="mt-2 text-xs text-muted-foreground bg-secondary p-4 rounded-md">
+          {Array.isArray(result.sources) ? (
+            <ul className="list-disc list-inside space-y-1">
+              {result.sources.map((source, idx) => (
+                <li key={idx}>{source}</li>
+              ))}
+            </ul>
+          ) : (
+            <div className="whitespace-pre-wrap">{result.sources}</div>
+          )}
         </div>
       </details>
     </CardContent>

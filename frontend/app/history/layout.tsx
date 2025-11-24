@@ -1,0 +1,44 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuth, FullScreenLoader } from '@/context/auth-context';
+import {
+  SidebarProvider,
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import { Header } from '@/components/dashboard/header';
+import { Toaster } from '@/components/ui/toaster';
+
+export default function HistoryLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push(`/login?redirect=${pathname}`);
+    }
+  }, [user, loading, router, pathname]);
+
+  if (loading || !user) {
+    return <FullScreenLoader />;
+  }
+
+  return (
+    <SidebarProvider>
+      <SidebarInset>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1">{children}</main>
+        </div>
+        <Toaster />
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
