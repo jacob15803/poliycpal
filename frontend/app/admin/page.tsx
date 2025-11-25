@@ -40,9 +40,25 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         setDocuments(data.documents || []);
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: `Failed to load documents: ${response.status} ${response.statusText}` 
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load documents:', error);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setMessage({ 
+          type: 'error', 
+          text: `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running on port 8000.` 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: `Failed to load documents: ${error.message || 'Unknown error'}` 
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -99,7 +115,15 @@ export default function AdminPage() {
         setMessage({ type: 'error', text: data.detail || 'Upload failed' });
       }
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Upload failed' });
+      console.error('Upload error:', error);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setMessage({ 
+          type: 'error', 
+          text: `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running on port 8000.` 
+        });
+      } else {
+        setMessage({ type: 'error', text: error.message || 'Upload failed' });
+      }
     } finally {
       setUploading(false);
     }

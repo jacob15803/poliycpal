@@ -3,6 +3,7 @@ Agentic debate system using LangGraph.
 Implements IT Expert, HR Expert, and Coordinator agents.
 """
 import os
+import asyncio
 from typing import Dict, List
 from pydantic import BaseModel
 
@@ -13,8 +14,8 @@ from services.llm_service import get_llm_provider
 class DebateState(BaseModel):
     """State shared between agents in the debate system."""
     question: str
-    it_context: List[str]
-    hr_context: List[str]
+    it_context: List[str] = []
+    hr_context: List[str] = []
     it_expert_response: str = ""
     hr_expert_response: str = ""
     final_answer: str = ""
@@ -50,8 +51,10 @@ class AgenticDebateService:
         # Initialize state
         state = DebateState(question=question)
         
-        # Step 1: Retrieve relevant chunks from all policy areas
-        all_chunks = self.rag_service.retrieve_from_all_areas(question, top_k_per_area=5)
+        # Step 1: Retrieve relevant chunks from all policy areas (run in thread to avoid blocking)
+        all_chunks = await asyncio.to_thread(
+            self.rag_service.retrieve_from_all_areas, question, 5
+        )
         
         # Extract IT and HR contexts
         state.it_context = [
@@ -103,7 +106,8 @@ Guidelines:
         
         user_prompt = f"Question: {state.question}\n\nIT Policy Context:\n{context_text}\n\nProvide your analysis and answer based on the IT policy context."
         
-        response = self.llm.generate(system_prompt, user_prompt)
+        # Run LLM generation in thread pool to avoid blocking event loop
+        response = await asyncio.to_thread(self.llm.generate, system_prompt, user_prompt)
         return response
     
     async def _hr_expert_agent(self, state: DebateState) -> str:
@@ -121,7 +125,8 @@ Guidelines:
         
         user_prompt = f"Question: {state.question}\n\nHR Policy Context:\n{context_text}\n\nProvide your analysis and answer based on the HR policy context."
         
-        response = self.llm.generate(system_prompt, user_prompt)
+        # Run LLM generation in thread pool to avoid blocking event loop
+        response = await asyncio.to_thread(self.llm.generate, system_prompt, user_prompt)
         return response
     
     async def _coordinator_agent(self, state: DebateState) -> str:
@@ -146,6 +151,7 @@ HR Policy Expert's Analysis:
 
 Please synthesize these two expert perspectives into a comprehensive final answer that addresses the user's question. Identify any nuances, overlaps, or conflicts between the IT and HR perspectives."""
         
-        response = self.llm.generate(system_prompt, user_prompt)
+        # Run LLM generation in thread pool to avoid blocking event loop
+        response = await asyncio.to_thread(self.llm.generate, system_prompt, user_prompt)
         return response
 

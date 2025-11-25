@@ -4,7 +4,6 @@ import {
   addDoc,
   query,
   where,
-  orderBy,
   getDocs,
   Timestamp,
 } from 'firebase/firestore';
@@ -53,10 +52,11 @@ export async function addQueryToHistory(
 // Get all queries for a specific user, ordered by most recent
 export async function getUserQueryHistory(userId: string): Promise<Query[]> {
   try {
+    // Query without orderBy to avoid requiring a composite index
+    // We'll sort in memory instead
     const q = query(
       collection(db, 'queries'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
 
     const querySnapshot = await getDocs(q);
@@ -64,6 +64,14 @@ export async function getUserQueryHistory(userId: string): Promise<Query[]> {
     querySnapshot.forEach((doc) => {
       history.push({ id: doc.id, ...doc.data() } as Query);
     });
+    
+    // Sort by createdAt in descending order (most recent first)
+    history.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis() || 0;
+      const bTime = b.createdAt?.toMillis() || 0;
+      return bTime - aTime; // Descending order
+    });
+    
     return history;
   } catch (error) {
     console.error('Error getting documents: ', error);

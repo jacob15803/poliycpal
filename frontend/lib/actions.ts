@@ -89,16 +89,28 @@ export async function handleQuery(
     // Call FastAPI backend for agentic debate system
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     
-    const response = await fetch(`${API_BASE_URL}/api/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        question,
-        user_id: userId,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}/api/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question,
+          user_id: userId,
+        }),
+      });
+    } catch (fetchError: any) {
+      // Handle network errors specifically
+      if (fetchError.name === 'TypeError' && (fetchError.message.includes('fetch') || fetchError.message.includes('Failed to fetch'))) {
+        return {
+          result: null,
+          error: `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running on port 8000.`,
+        };
+      }
+      throw fetchError;
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'API request failed' }));

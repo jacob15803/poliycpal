@@ -35,13 +35,13 @@ class LLMProvider(ABC):
 class LocalLLMProvider(LLMProvider):
     """Local model provider using DistilBART or similar for text generation."""
     
-    def __init__(self, model_name: str = "sshleifer/distilbart-cnn-12-6"):
+    def __init__(self, model_name: str = "google/flan-t5-base"):
         """
         Initialize local model.
         
         Args:
             model_name: HuggingFace model name. Options:
-                - "sshleifer/distilbart-cnn-12-6" (small, fast)
+                - "google/flan-t5-base" (small, fast)
                 - "facebook/bart-large-cnn" (better quality, slower)
                 - "google/flan-t5-base" (instruction-tuned)
         """
@@ -106,6 +106,21 @@ class LocalLLMProvider(LLMProvider):
             
             # Decode
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Check if response is valid (not just the input or system prompt)
+            # DistilBART is a summarization model, not instruction-following, so it often fails
+            # Check if response looks like it's just echoing the prompt
+            response_lower = response.lower().strip()
+            system_start = system_prompt[:150].lower()
+            
+            # If response is too short, contains system prompt, or looks like input echo, use template
+            if (len(response) < 30 or 
+                system_start in response_lower or
+                "your role is to synthesize" in response_lower or
+                "guidelines:" in response_lower and len(response) < 200):
+                print(f"Model returned invalid response (likely echo), using template fallback. Response length: {len(response)}")
+                return self._template_based_synthesis(system_prompt, user_prompt)
+            
             return response
         except Exception as e:
             print(f"Error in model generation: {e}")
@@ -146,7 +161,7 @@ class LocalLLMProvider(LLMProvider):
             
             return f"Based on the HR policy context provided, here is the relevant information: {user_prompt[:300]}..."
         
-        elif "Coordinator" in system_prompt:
+        elif "Coordinator" in system_prompt or "Policy Coordinator" in system_prompt:
             # Coordinator synthesis template - extract expert responses
             if "IT Policy Expert's Analysis:" in user_prompt and "HR Policy Expert's Analysis:" in user_prompt:
                 it_start = user_prompt.find("IT Policy Expert's Analysis:") + len("IT Policy Expert's Analysis:")
@@ -157,15 +172,29 @@ class LocalLLMProvider(LLMProvider):
                 question_start = user_prompt.find("Original Question:") + len("Original Question:")
                 question = user_prompt[question_start:].split("\n\nIT Policy Expert's Analysis:")[0].strip()
                 
-                return f"""Based on the analysis from both IT and HR policy experts, here is a comprehensive answer to your question: "{question}"
+                # Create a proper synthesis
+                synthesis = f"""Based on the analysis from both IT and HR policy experts, here is a comprehensive answer to your question: "{question}"
 
-IT Policy Perspective:
-{it_response[:400]}...
+**IT Policy Perspective:**
+{it_response}
 
-HR Policy Perspective:
-{hr_response[:400]}...
+**HR Policy Perspective:**
+{hr_response}
 
-Synthesized Answer: This question involves both IT and HR policy considerations. The IT policy expert has provided technical and security-related information, while the HR policy expert has addressed employee-related aspects. Please review both perspectives above for a complete understanding of the policy requirements."""
+**Synthesized Answer:**
+"""
+                
+                # Add intelligent synthesis based on the responses
+                if len(it_response) > 50 and len(hr_response) > 50:
+                    synthesis += f"This question involves both IT and HR policy considerations. {it_response[:200]}... The HR perspective adds: {hr_response[:200]}... Together, these perspectives provide a complete understanding of the policy requirements."
+                elif len(it_response) > 50:
+                    synthesis += f"The IT policy expert has provided detailed information: {it_response[:300]}... This addresses the technical and security aspects of your question."
+                elif len(hr_response) > 50:
+                    synthesis += f"The HR policy expert has provided detailed information: {hr_response[:300]}... This addresses the employee and workplace aspects of your question."
+                else:
+                    synthesis += "Both experts have provided their perspectives. Please review the IT and HR policy information above for a complete understanding."
+                
+                return synthesis
             
             return "Based on the analysis from both IT and HR policy experts, here is a comprehensive answer that synthesizes both perspectives. Please review the expert analyses provided above for complete information."
         
@@ -205,7 +234,7 @@ def get_llm_provider() -> LLMProvider:
     
     Environment variables:
     - LLM_PROVIDER: "local" (default) or "openai"
-    - LOCAL_MODEL_NAME: HuggingFace model name (default: "sshleifer/distilbart-cnn-12-6")
+    - LOCAL_MODEL_NAME: HuggingFace model name (default: "google/flan-t5-base")
     - OPENAI_API_KEY: Required if using OpenAI
     - OPENAI_MODEL: Model name (default: "gpt-4o")
     """
@@ -220,6 +249,6 @@ def get_llm_provider() -> LLMProvider:
             return OpenAIProvider(model=model)
     
     # Default to local
-    model_name = os.getenv("LOCAL_MODEL_NAME", "sshleifer/distilbart-cnn-12-6")
+    model_name = os.getenv("LOCAL_MODEL_NAME", "google/flan-t5-base")
     return LocalLLMProvider(model_name=model_name)
 

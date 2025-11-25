@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60a3146e6b168e79756b1918c29825ce5bc84473f4": {
+      "workers": {
+        "app/(auth)/signup/page": {
+          "moduleId": "[project]/frontend/.next-internal/server/app/(auth)/signup/page/actions.js { ACTIONS_MODULE0 => \"[project]/frontend/lib/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/(auth)/signup/page": "action-browser"
+      }
+    }
+  },
+  "edge": {}
+}

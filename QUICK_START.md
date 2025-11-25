@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 # Create .env file
 echo "LLM_PROVIDER=local" > .env
-echo "LOCAL_MODEL_NAME=sshleifer/distilbart-cnn-12-6" >> .env
+echo "LOCAL_MODEL_NAME=sshleifer/google/flan-t5-base" >> .env
 
 # Start server
 uvicorn main:app --reload --port 8000
