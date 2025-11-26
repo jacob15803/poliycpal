@@ -1,7 +1,4 @@
 {
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/admin/page": "app/admin/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/history/[id]/page": "app/history/[id]/page.js",

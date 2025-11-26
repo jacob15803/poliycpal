@@ -68,6 +68,47 @@ class LocalLLMProvider(LLMProvider):
             self.model = None
             self.tokenizer = None
     
+    def _has_repetition(self, text: str, min_repeat: int = 3) -> bool:
+        """Check if text has repetitive phrases."""
+        words = text.lower().split()
+        if len(words) < min_repeat * 2:
+            return False
+        # Check for repeated phrases of 3+ words
+        for i in range(len(words) - min_repeat * 2):
+            phrase = ' '.join(words[i:i+min_repeat])
+            remaining_text = ' '.join(words[i+min_repeat:])
+            if phrase in remaining_text:
+                return True
+        return False
+    
+    def _clean_response(self, response: str) -> str:
+        """Clean up model response: remove repetition, fix phrasing."""
+        # Remove excessive repetition (keep only first occurrence of each sentence)
+        sentences = response.split('.')
+        seen = set()
+        cleaned = []
+        for sentence in sentences:
+            sentence_stripped = sentence.strip()
+            if not sentence_stripped:
+                continue
+            sentence_lower = sentence_stripped.lower()
+            # Check if we've seen this exact sentence before
+            if sentence_lower not in seen:
+                seen.add(sentence_lower)
+                cleaned.append(sentence_stripped)
+        result = '. '.join(cleaned)
+        
+        # Remove very short repetitive phrases at the end
+        words = result.split()
+        if len(words) > 10:
+            # Check last 5 words for repetition in the rest of the text
+            last_phrase = ' '.join(words[-5:]).lower()
+            remaining_text = ' '.join(words[:-5]).lower()
+            if last_phrase in remaining_text:
+                result = ' '.join(words[:-5])
+        
+        return result.strip()
+    
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         """Generate response using local model."""
         if self.model is None:
@@ -77,8 +118,7 @@ class LocalLLMProvider(LLMProvider):
         # Combine prompts
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
         
-        # For DistilBART, we'll use it for summarization/synthesis
-        # Truncate if too long (DistilBART has 1024 token limit)
+        # Truncate if too long (flan-t5 models have token limits)
         max_length = 1024
         
         try:
@@ -93,32 +133,37 @@ class LocalLLMProvider(LLMProvider):
             if self.device >= 0:
                 inputs = {k: v.to(f"cuda:{self.device}") for k, v in inputs.items()}
             
-            # Generate
+            # Generate with improved parameters for flan-t5
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
-                    max_length=512,
-                    min_length=50,
-                    num_beams=4,
+                    max_length=256,  # Reduced from 512 for less repetition
+                    min_length=20,   # Reduced from 50
+                    num_beams=2,     # Reduced from 4 (faster, less repetitive)
                     early_stopping=True,
-                    do_sample=False
+                    do_sample=True,  # Changed from False for more variety
+                    temperature=0.7, # Add temperature for less repetition
+                    repetition_penalty=1.2  # Add repetition penalty
                 )
             
             # Decode
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
+            # Clean the response first
+            response = self._clean_response(response)
+            
             # Check if response is valid (not just the input or system prompt)
-            # DistilBART is a summarization model, not instruction-following, so it often fails
             # Check if response looks like it's just echoing the prompt
             response_lower = response.lower().strip()
             system_start = system_prompt[:150].lower()
             
-            # If response is too short, contains system prompt, or looks like input echo, use template
+            # Enhanced validation including repetition check
             if (len(response) < 30 or 
                 system_start in response_lower or
                 "your role is to synthesize" in response_lower or
-                "guidelines:" in response_lower and len(response) < 200):
-                print(f"Model returned invalid response (likely echo), using template fallback. Response length: {len(response)}")
+                "guidelines:" in response_lower and len(response) < 200 or
+                self._has_repetition(response, min_repeat=3)):  # Check for repetitive patterns
+                print(f"Model returned invalid response (repetitive or echo), using template fallback. Response length: {len(response)}")
                 return self._template_based_synthesis(system_prompt, user_prompt)
             
             return response
